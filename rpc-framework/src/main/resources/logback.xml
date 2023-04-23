@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false" scan="true" scanPeriod="1 seconds">
+
+    <contextName>logback-spring</contextName>
+    <property name="PROJECT_NAME" value="netty-study"/>
+    <property name="LOG_HOME" value="./netty-study"/>
+
+    <property name="PRINT_PATTERN"
+              value="%magenta(%d{yyyy-MM-dd HH:mm:ss.SSS}) %yellow(%-5level) %magenta(${PID:-}) %-20(%yellow([%20.20thread])) %cyan([%-40logger{40}:%L]) -> %msg%n"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${PRINT_PATTERN}</pattern>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+
+    <root level="debug">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+</configuration>
