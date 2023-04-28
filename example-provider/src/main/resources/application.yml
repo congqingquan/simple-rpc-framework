@@ -1,0 +1,10 @@
+cqq-rpc:
+  server-name: C99-RPCNettyServer
+
+logging:
+  level:
+    org:
+      springframework:
+        boot:
+          autoconfigure:
+            logging: error
