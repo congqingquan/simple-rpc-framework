@@ -32,7 +32,7 @@ public class RPCNettyClient {
     private final RPCNettyClientHandler clientHandler;
 
     public RPCNettyClient() {
-        EventLoopGroup group = NettyEventLoopFactory.eventLoopGroup(1, DubboRemotingConstants.EVENT_LOOP_BOSS_POOL_NAME);
+        EventLoopGroup group = NettyEventLoopFactory.eventLoopGroup(1, DubboRemotingConstants.EVENT_LOOP_CLIENT_BOSS_POOL_NAME);
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.channel(NettyEventLoopFactory.socketChannelClass());
         bootstrap.group(group);
@@ -46,15 +46,14 @@ public class RPCNettyClient {
             protected void initChannel(SocketChannel ch) throws Exception {
                 ch.pipeline().addLast("protocol-frame-decode-handler", new ProtocolFrameDecoder());
                 ch.pipeline().addLast("message-codec-handler", messageCodec);
-                ch.pipeline().addLast("logging-handler", loggingHandler);
+//                ch.pipeline().addLast("logging-handler", loggingHandler);
                 ch.pipeline().addLast("rpc-netty-client-handler", clientHandler);
             }
         });
-        clientChannel = bootstrap.connect("localhost", 9010).syncUninterruptibly().channel();
-        System.out.println();
+        clientChannel = bootstrap.connect("localhost", 9010).channel();
     }
 
-    public Object request(RPCRequestMessage requestMessage) throws InterruptedException {
+    public Object request(RPCRequestMessage requestMessage) {
         return clientHandler.request(requestMessage);
     }
 }

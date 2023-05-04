@@ -2,6 +2,7 @@ package org.cqq.cqqrpc.framework.proxy.jdk;
 
 import lombok.extern.slf4j.Slf4j;
 import org.cqq.cqqrpc.framework.netty.RPCNettyClient;
+import org.cqq.cqqrpc.framework.netty.message.Message;
 import org.cqq.cqqrpc.framework.netty.message.RPCRequestMessage;
 import org.cqq.cqqrpc.framework.util.SequenceIdGenerator;
 
@@ -27,11 +28,12 @@ public class RemotingProxyInvocationHandler<T> implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        String interfaceName = target.getSimpleName();
+        String interfaceName = target.getName();
         String methodName = method.getName();
         Class<?> returnType = method.getReturnType();
         Class<?>[] parameterTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
         RPCRequestMessage request = new RPCRequestMessage();
+        request.setType(Message.Type.RPC_REQUEST_MESSAGE);
         request.setInterfaceName(interfaceName);
         request.setMethodName(methodName);
         request.setReturnType(returnType);

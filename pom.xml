@@ -10,7 +10,7 @@
     <name>simple-rpc-framework</name>
     <modules>
         <module>cqq-rpc</module>
-        <module>cqq-rpc-spring-boot-starter</module>
+        <module>cqq-rpc-boot-starter</module>
         <module>example-provider</module>
         <module>example-consumer</module>
         <module>example-interface</module>
@@ -33,7 +33,7 @@
             </dependency>
             <dependency>
                 <groupId>org.cqq</groupId>
-                <artifactId>cqq-rpc-spring-boot-starter</artifactId>
+                <artifactId>cqq-rpc-boot-starter</artifactId>
                 <version>${version}</version>
             </dependency>
             <dependency>

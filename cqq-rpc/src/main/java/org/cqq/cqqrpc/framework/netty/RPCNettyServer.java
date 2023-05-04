@@ -9,8 +9,6 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.Future;
 import org.cqq.cqqrpc.framework.common.constants.DubboRemotingConstants;
@@ -48,10 +46,11 @@ public class RPCNettyServer {
 
     public void start() {
         // group
-        bossGroup = NettyEventLoopFactory.eventLoopGroup(1, DubboRemotingConstants.EVENT_LOOP_BOSS_POOL_NAME);
-        workerGroup = NettyEventLoopFactory.eventLoopGroup(DubboRemotingConstants.DEFAULT_IO_THREADS, DubboRemotingConstants.EVENT_LOOP_WORKER_POOL_NAME);
+        bossGroup = NettyEventLoopFactory.eventLoopGroup(1, String.format("%s-%s", serverName, DubboRemotingConstants.EVENT_LOOP_SERVER_BOSS_POOL_NAME));
+        workerGroup = NettyEventLoopFactory.eventLoopGroup(
+                DubboRemotingConstants.DEFAULT_IO_THREADS, String.format("%s-%s", serverName, DubboRemotingConstants.EVENT_LOOP_SERVER_WORKER_POOL_NAME));
         // handler
-        LoggingHandler loggingHandler = new LoggingHandler(LogLevel.DEBUG);
+        // LoggingHandler loggingHandler = new LoggingHandler(LogLevel.DEBUG);
         ChannelDuplexHandler messageCodec = GlobalConfig.DEFAULT_SHARABLE_MESSAGE_CODEC;
         RPCNettyServerHandler rpcNettyServerHandler = new RPCNettyServerHandler(RPCNettyServer.this);
         // setting
@@ -66,7 +65,7 @@ public class RPCNettyServer {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline().addLast("protocol-frame-decode-handler", new ProtocolFrameDecoder());
                         ch.pipeline().addLast("message-codec-handler", messageCodec);
-                        ch.pipeline().addLast("logging-handler", loggingHandler);
+                        // ch.pipeline().addLast("logging-handler", loggingHandler);
                         ch.pipeline().addLast("server-idle-handler",
                                 new IdleStateHandler(0, 0, DubboRemotingConstants.DEFAULT_IDLE_TIMEOUT_MILLISECONDS, MILLISECONDS));
                         ch.pipeline().addLast("rpc-netty-server-handler", rpcNettyServerHandler);

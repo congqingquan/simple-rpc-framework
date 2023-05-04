@@ -8,10 +8,10 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>cqq-rpc-spring-boot-starter</artifactId>
+    <artifactId>cqq-rpc-boot-starter</artifactId>
     <packaging>jar</packaging>
 
-    <name>cqq-rpc-spring-boot-starter</name>
+    <name>cqq-rpc-boot-starter</name>
 
     <dependencies>
         <dependency>

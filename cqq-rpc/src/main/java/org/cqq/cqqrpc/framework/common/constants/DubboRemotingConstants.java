@@ -113,9 +113,11 @@ public interface DubboRemotingConstants {
 
     int DEFAULT_IO_THREADS = Math.min(Runtime.getRuntime().availableProcessors() + 1, 32);
 
-    String EVENT_LOOP_BOSS_POOL_NAME = "NettyServerBoss";
+    String EVENT_LOOP_CLIENT_BOSS_POOL_NAME = "NettyClientBoss";
+    
+    String EVENT_LOOP_SERVER_BOSS_POOL_NAME = "NettyServerBoss";
 
-    String EVENT_LOOP_WORKER_POOL_NAME = "NettyServerWorker";
+    String EVENT_LOOP_SERVER_WORKER_POOL_NAME = "NettyServerWorker";
 
     String NETTY_EPOLL_ENABLE_KEY = "netty.epoll.enable";
 

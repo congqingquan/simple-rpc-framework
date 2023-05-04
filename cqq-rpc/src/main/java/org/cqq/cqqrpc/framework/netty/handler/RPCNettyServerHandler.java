@@ -1,14 +1,14 @@
 package org.cqq.cqqrpc.framework.netty.handler;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
-import org.cqq.cqqrpc.framework.netty.RPCNettyServer;
 import org.cqq.cqqrpc.framework.container.spring.BeanFactory;
+import org.cqq.cqqrpc.framework.netty.RPCNettyServer;
 import org.cqq.cqqrpc.framework.netty.message.RPCRequestMessage;
 import org.cqq.cqqrpc.framework.netty.message.RPCResponseMessage;
 import org.cqq.cqqrpc.framework.util.NetUtils;
@@ -24,7 +24,7 @@ import java.util.Map;
  */
 @Slf4j
 @ChannelHandler.Sharable
-public class RPCNettyServerHandler extends ChannelDuplexHandler {
+public class RPCNettyServerHandler extends ChannelInboundHandlerAdapter {
 
     private final RPCNettyServer server;
 
@@ -67,7 +67,7 @@ public class RPCNettyServerHandler extends ChannelDuplexHandler {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
-            if (IdleState.READER_IDLE == event.state() || IdleState.WRITER_IDLE == event.state()) {
+            if (IdleState.ALL_IDLE == event.state()) {
                 Channel channel = ctx.channel();
                 String remoteAddress = getChannelKey(channel);
                 log.info("连接不活跃，断开连接 [{}]", remoteAddress);
@@ -92,15 +92,12 @@ public class RPCNettyServerHandler extends ChannelDuplexHandler {
         Class<?> returnType = request.getReturnType();
 
         RPCResponseMessage response = new RPCResponseMessage();
-        response.setSequenceId(response.getSequenceId());
+        response.setSequenceId(request.getSequenceId());
         response.setType(request.getType());
         try {
-            Object bean = BeanFactory.getBean(interfaceName);
+            Object bean = BeanFactory.getBean(Class.forName(interfaceName));
             Method method = bean.getClass().getMethod(methodName, parameterTypes);
             Object methodResult = method.invoke(bean, parameterValue);
-            if (method.getReturnType() == returnType) {
-                throw new NoSuchMethodException(String.format("Cannot found the method why invalid return type: %s", returnType));
-            }
             response.setReturnValue(methodResult);
         } catch (Exception exception) {
             response.setExceptionValue(exception);
