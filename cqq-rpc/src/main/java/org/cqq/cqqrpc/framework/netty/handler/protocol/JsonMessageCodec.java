@@ -5,7 +5,6 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
-import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.cqq.cqqrpc.framework.common.constants.GlobalConfig;
 import org.cqq.cqqrpc.framework.netty.message.Message;
@@ -53,8 +52,6 @@ public class JsonMessageCodec extends MessageToMessageCodec<ByteBuf, Message> {
         out.writeInt(content.length); // 4
         out.writeBytes(content);
         outList.add(out);
-        
-        ReferenceCountUtil.release(out);
     }
     
     @Override

@@ -9,8 +9,8 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.Future;
+import lombok.extern.slf4j.Slf4j;
 import org.cqq.cqqrpc.framework.common.constants.DubboRemotingConstants;
 import org.cqq.cqqrpc.framework.common.constants.GlobalConfig;
 import org.cqq.cqqrpc.framework.netty.handler.RPCNettyServerHandler;
@@ -21,14 +21,15 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
 /**
  * Created by QQ.Cong on 2023-04-26 / 13:50
  *
  * @Description RPC netty server
  */
+@Slf4j
 public class RPCNettyServer {
+
+    private static RPCNettyServer instance;
 
     private final String serverName;
 
@@ -44,7 +45,12 @@ public class RPCNettyServer {
         this.serverName = serverName;
     }
 
+    public static RPCNettyServer getInstance() {
+        return instance;
+    }
+
     public void start() {
+        log.info("{} starting...", serverName);
         // group
         bossGroup = NettyEventLoopFactory.eventLoopGroup(1, String.format("%s-%s", serverName, DubboRemotingConstants.EVENT_LOOP_SERVER_BOSS_POOL_NAME));
         workerGroup = NettyEventLoopFactory.eventLoopGroup(
@@ -66,8 +72,8 @@ public class RPCNettyServer {
                         ch.pipeline().addLast("protocol-frame-decode-handler", new ProtocolFrameDecoder());
                         ch.pipeline().addLast("message-codec-handler", messageCodec);
                         // ch.pipeline().addLast("logging-handler", loggingHandler);
-                        ch.pipeline().addLast("server-idle-handler",
-                                new IdleStateHandler(0, 0, DubboRemotingConstants.DEFAULT_IDLE_TIMEOUT_MILLISECONDS, MILLISECONDS));
+                        // ch.pipeline().addLast("server-idle-handler",
+                        //         new IdleStateHandler(0, 0, DubboRemotingConstants.DEFAULT_IDLE_TIMEOUT_MILLISECONDS, MILLISECONDS));
                         ch.pipeline().addLast("rpc-netty-server-handler", rpcNettyServerHandler);
                     }
                 });
@@ -76,9 +82,15 @@ public class RPCNettyServer {
         serverChannel = channelFuture.channel();
         // wait
         new Thread(() -> serverChannel.closeFuture().syncUninterruptibly(), serverName).start();
+        // registry shutdown hook
+        registryShutdownHook();
+        // set instance
+        RPCNettyServer.instance = this;
+        log.info("{} started", serverName);
     }
 
     public void shutdown() {
+        log.info("{} shutdown...", serverName);
         // unbind (cancel listen acceptable event)
         serverChannel.close();
         // shutdown boss and worker thread pool
@@ -91,6 +103,11 @@ public class RPCNettyServer {
         channels.values().forEach(Channel::close);
         // 2. clear socket channel map
         channels.clear();
+        log.info("{} shutdown", serverName);
+    }
+
+    private void registryShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, String.format("%s-cleaner", serverName)));
     }
 
     public Map<String, Channel> getChannels() {

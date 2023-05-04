@@ -4,6 +4,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.cqq.cqqrpc.framework.netty.message.RPCRequestMessage;
 import org.cqq.cqqrpc.framework.netty.message.RPCResponseMessage;
 
@@ -16,17 +17,12 @@ import java.util.concurrent.locks.LockSupport;
  *
  * @Description PRC netty client handler
  */
+@Slf4j
 @ChannelHandler.Sharable
 public class RPCNettyClientHandler extends ChannelInboundHandlerAdapter {
 
-    @Data
-    private static class Response {
-        
-        private Thread thread;
-        
-        private RPCResponseMessage responseMessage;
-    }
-    
+    private volatile boolean connected;
+
     private ChannelHandlerContext context;
     
     private final Map<String, Response> requests = new ConcurrentHashMap<>();
@@ -34,9 +30,9 @@ public class RPCNettyClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         context = ctx;
+        connected = true;
     }
-    
-    
+
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof RPCResponseMessage) {
@@ -50,6 +46,9 @@ public class RPCNettyClientHandler extends ChannelInboundHandlerAdapter {
     }
     
     public Object request(RPCRequestMessage requestMessage) {
+        if (!connected) {
+            tryConnect();
+        }
         String sequenceId = requestMessage.getSequenceId();
         Response response = new Response();
         response.setThread(Thread.currentThread());
@@ -65,6 +64,32 @@ public class RPCNettyClientHandler extends ChannelInboundHandlerAdapter {
             // Do something
         }
         Object returnValue = responseMessage.getReturnValue();
+        requests.remove(sequenceId);
         return returnValue;
+    }
+
+    private void tryConnect() {
+        int retryCount = 0;
+        int maxRetryCount = 3;
+        while (!connected) {
+            retryCount++;
+            if (retryCount > maxRetryCount) {
+                throw new RuntimeException("Cannot connect server successfully");
+            }
+            log.info("Retry to connect server -> {}", retryCount);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Data
+    private static class Response {
+
+        private Thread thread;
+
+        private RPCResponseMessage responseMessage;
     }
 }

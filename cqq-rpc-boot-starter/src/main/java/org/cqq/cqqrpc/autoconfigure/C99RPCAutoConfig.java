@@ -1,9 +1,7 @@
 package org.cqq.cqqrpc.autoconfigure;
 
 import org.cqq.cqqrpc.framework.container.spring.BeanFactory;
-import org.cqq.cqqrpc.framework.netty.RPCNettyServer;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,26 +9,24 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Created by QQ.Cong on 2023-04-28 / 11:46
  *
- * @Description cqq-rpc spring boot stater config
+ * @Description cqq-rpc spring boot stater auto config
  */
 @Configuration
-@EnableConfigurationProperties(C99RPCSettings.class)
-public class C99RPCAutoConfig implements InitializingBean {
+public class C99RPCAutoConfig {
 
-    private final C99RPCSettings settings;
-
-    public C99RPCAutoConfig(C99RPCSettings settings) {
-        this.settings = settings;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        RPCNettyServer server = new RPCNettyServer(settings.getServerName());
-        server.start();
+    @Bean
+    @ConfigurationProperties("cqq-rpc")
+    public C99RPCSettings c99RPCSettings() {
+        return new C99RPCSettings();
     }
 
     @Bean
-    public BeanFactory cqqRPCBeanFactory(ApplicationContext applicationContext) {
+    public C99RPCApplicationStartListener c99RPCApplicationListener(C99RPCSettings settings) {
+        return new C99RPCApplicationStartListener(settings);
+    }
+
+    @Bean
+    public BeanFactory c99RPCBeanFactory(ApplicationContext applicationContext) {
         BeanFactory beanFactory = new BeanFactory();
         beanFactory.setApplicationContext(applicationContext);
         return beanFactory;
